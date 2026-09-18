@@ -1,6 +1,7 @@
 package main
 
 // TODO: Add JWT or OAuth or both
+// TODO: return data encrypted
 import (
 	"encoding/json"
 	"net/http"
