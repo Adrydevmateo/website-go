@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -25,6 +26,11 @@ type User struct {
 	Fullname string
 	Email    string
 	Age      int
+}
+
+type SignIn struct {
+	Email    string
+	Password string
 }
 
 var tokenAuth *jwtauth.JWTAuth
@@ -80,7 +86,29 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signInHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r)
+	// TODO: return the sign in success message and a jwt
+	defer r.Body.Close()
+	body, readErr := io.ReadAll(r.Body)
+	if readErr != nil {
+		w.Write([]byte("failed getting the request body"))
+		return
+	}
+	signInData := SignIn{}
+	jsonErr := json.Unmarshal(body, &signInData)
+	if jsonErr != nil {
+		w.Write([]byte("error parsing data"))
+		return
+	}
+	if signInData.Email != "test@gmail.com" {
+		w.Write([]byte("this user email does not exist"))
+		return
+	}
+	if signInData.Password != "123" {
+		w.Write([]byte("this password is incorrect"))
+		return
+	}
+	user := User{Fullname: "Test Mateo Ramon", Email: signInData.Email, Age: 26}
+	fmt.Println(signInData)
 	w.Write([]byte("Sign In"))
 }
 
