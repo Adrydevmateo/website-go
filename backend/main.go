@@ -108,7 +108,12 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := User{Fullname: "Test Mateo Ramon", Email: signInData.Email, Age: 26}
-	fmt.Println(signInData)
+	_, tokenString, tokenErr := tokenAuth.Encode(map[string]any{"Fullname": user.Fullname, "Email": user.Email})
+	if tokenErr != nil {
+		w.Write([]byte("error generating token"))
+		return
+	}
+	fmt.Println(tokenString)
 	w.Write([]byte("Sign In"))
 }
 
