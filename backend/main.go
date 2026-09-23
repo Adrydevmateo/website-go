@@ -1,8 +1,7 @@
 package main
 
-// TODO: Add JWT
+// TODO: implement refresh token logic
 // TODO: return data encrypted
-// TODO: Create sign up and sign in endpoints
 import (
 	"encoding/json"
 	"fmt"
@@ -33,7 +32,19 @@ type SignIn struct {
 	Password string
 }
 
+type SignUp struct {
+	Fullname string
+	Email    string
+	Password string
+	Age      int
+}
+
+const MsgErrorReadingRequestBody = "failed reading request body"
+const MsgErrorParsingData = "error parsing data"
+const MsgErrorGeneratingJwt = "error generating jwt"
+
 var tokenAuth *jwtauth.JWTAuth
+var user User
 
 func init() {
 	tokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
@@ -86,17 +97,17 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signInHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: return the sign in success message and a jwt
+	// TODO: add data (email, password) validation
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
-		w.Write([]byte("failed getting the request body"))
+		w.Write([]byte(MsgErrorReadingRequestBody))
 		return
 	}
-	signInData := SignIn{}
+	var signInData SignIn
 	jsonErr := json.Unmarshal(body, &signInData)
 	if jsonErr != nil {
-		w.Write([]byte("error parsing data"))
+		w.Write([]byte(MsgErrorParsingData))
 		return
 	}
 	if signInData.Email != "test@gmail.com" {
@@ -107,20 +118,32 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("this password is incorrect"))
 		return
 	}
-	user := User{Fullname: "Test Mateo Ramon", Email: signInData.Email, Age: 26}
-	_, tokenString, tokenErr := tokenAuth.Encode(map[string]any{"Fullname": user.Fullname, "Email": user.Email})
+	user = User{Fullname: "Adry Mateo Ramon", Email: signInData.Email, Age: 26}
+	_, tokenString, tokenErr := tokenAuth.Encode(map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age})
 	if tokenErr != nil {
-		w.Write([]byte("error generating token"))
+		w.Write([]byte(MsgErrorGeneratingJwt))
 		return
 	}
 	w.Write([]byte(tokenString))
 }
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
-	user := User{Fullname: "Adry Mateo Ramon", Email: "adry@gmail.com"}
-	_, tokenString, err := tokenAuth.Encode(map[string]any{"name": user.Fullname, "email": user.Email})
+	// TODO: add data (email, password, age, fullname) validation
+	defer r.Body.Close()
+	body, readErr := io.ReadAll(r.Body)
+	if readErr != nil {
+		w.Write([]byte(MsgErrorReadingRequestBody))
+		return
+	}
+	var signUpData SignUp
+	jsonErr := json.Unmarshal(body, &signUpData)
+	if jsonErr != nil {
+		w.Write([]byte(MsgErrorParsingData))
+		return
+	}
+	_, tokenString, err := tokenAuth.Encode(map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age})
 	if err != nil {
-		w.Write([]byte("error generating the jwt"))
+		w.Write([]byte(MsgErrorGeneratingJwt))
 		return
 	}
 	w.Write([]byte(tokenString))
@@ -128,12 +151,13 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 
 func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: get projects from a list
+	// TODO: check token expiration date
 	_, claims, _ := jwtauth.FromContext(r.Context())
-	fmt.Fprintf(w, "protected area. hi %v", claims["name"])
+	fmt.Println(claims["Fullname"])
 	project := Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
 	j, err := json.Marshal(project)
 	if err != nil {
-		w.Write([]byte("Error getting json"))
+		w.Write([]byte(MsgErrorParsingData))
 		return
 	}
 	w.Write(j)
