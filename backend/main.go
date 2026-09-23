@@ -1,6 +1,5 @@
 package main
 
-// TODO: implement refresh token logic
 // TODO: return data encrypted
 import (
 	"encoding/json"
@@ -42,6 +41,7 @@ type SignUp struct {
 const MsgErrorReadingRequestBody = "failed reading request body"
 const MsgErrorParsingData = "error parsing data"
 const MsgErrorGeneratingJwt = "error generating jwt"
+const TokenExpTime = time.Minute * 5
 
 var tokenAuth *jwtauth.JWTAuth
 var user User
@@ -119,7 +119,9 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user = User{Fullname: "Adry Mateo Ramon", Email: signInData.Email, Age: 26}
-	_, tokenString, tokenErr := tokenAuth.Encode(map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age})
+	claims := map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age}
+	jwtauth.SetExpiry(claims, time.Now().Add(TokenExpTime))
+	_, tokenString, tokenErr := tokenAuth.Encode(claims)
 	if tokenErr != nil {
 		w.Write([]byte(MsgErrorGeneratingJwt))
 		return
@@ -141,7 +143,9 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(MsgErrorParsingData))
 		return
 	}
-	_, tokenString, err := tokenAuth.Encode(map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age})
+	claims := map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age}
+	_, tokenString, err := tokenAuth.Encode(claims)
+	jwtauth.SetExpiry(claims, time.Now().Add(TokenExpTime))
 	if err != nil {
 		w.Write([]byte(MsgErrorGeneratingJwt))
 		return
@@ -151,9 +155,8 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 
 func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: get projects from a list
-	// TODO: check token expiration date
 	_, claims, _ := jwtauth.FromContext(r.Context())
-	fmt.Println(claims["Fullname"])
+	fmt.Println(claims)
 	project := Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
 	j, err := json.Marshal(project)
 	if err != nil {
