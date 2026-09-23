@@ -113,8 +113,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("error generating token"))
 		return
 	}
-	fmt.Println(tokenString)
-	w.Write([]byte("Sign In"))
+	w.Write([]byte(tokenString))
 }
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
