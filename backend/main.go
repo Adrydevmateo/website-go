@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -41,6 +42,7 @@ type SignUp struct {
 const MsgErrorReadingRequestBody = "failed reading request body"
 const MsgErrorParsingData = "error parsing data"
 const MsgErrorGeneratingJwt = "error generating jwt"
+const MsgErrorInvalidEmail = "invalid email format"
 const TokenExpTime = time.Minute * 5
 
 var tokenAuth *jwtauth.JWTAuth
@@ -110,6 +112,11 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(MsgErrorParsingData))
 		return
 	}
+	_, emailRegexError := regexp.Match("@", []byte(signInData.Email))
+	if emailRegexError != nil {
+		w.Write([]byte(MsgErrorInvalidEmail))
+		return
+	}
 	if signInData.Email != "test@gmail.com" {
 		w.Write([]byte("this user email does not exist"))
 		return
@@ -141,6 +148,11 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	jsonErr := json.Unmarshal(body, &signUpData)
 	if jsonErr != nil {
 		w.Write([]byte(MsgErrorParsingData))
+		return
+	}
+	_, emailRegexError := regexp.Match("@", []byte(signUpData.Email))
+	if emailRegexError != nil {
+		w.Write([]byte(MsgErrorInvalidEmail))
 		return
 	}
 	claims := map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age}
