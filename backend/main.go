@@ -43,6 +43,7 @@ const MsgErrorReadingRequestBody = "failed reading request body"
 const MsgErrorParsingData = "error parsing data"
 const MsgErrorGeneratingJwt = "error generating jwt"
 const MsgErrorInvalidEmail = "invalid email format"
+const MsgErrorMatchingRegex = "error matching regex"
 const TokenExpTime = time.Minute * 5
 
 var tokenAuth *jwtauth.JWTAuth
@@ -99,7 +100,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signInHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: add data (email, password) validation
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
@@ -112,8 +112,12 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(MsgErrorParsingData))
 		return
 	}
-	_, emailRegexError := regexp.Match("@", []byte(signInData.Email))
+	emailRegexMatch, emailRegexError := regexp.Match("@", []byte(signInData.Email))
 	if emailRegexError != nil {
+		w.Write([]byte(MsgErrorMatchingRegex))
+		return
+	}
+	if !emailRegexMatch {
 		w.Write([]byte(MsgErrorInvalidEmail))
 		return
 	}
@@ -137,7 +141,6 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: add data (email, password, age, fullname) validation
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
@@ -150,8 +153,12 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(MsgErrorParsingData))
 		return
 	}
-	_, emailRegexError := regexp.Match("@", []byte(signUpData.Email))
+	emailRegexMatch, emailRegexError := regexp.Match("@", []byte(signUpData.Email))
 	if emailRegexError != nil {
+		w.Write([]byte(MsgErrorMatchingRegex))
+		return
+	}
+	if !emailRegexMatch {
 		w.Write([]byte(MsgErrorInvalidEmail))
 		return
 	}
