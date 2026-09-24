@@ -1,6 +1,7 @@
 package main
 
 // TODO: return data encrypted
+// TODO: get jwt secret from env
 import (
 	"encoding/json"
 	"fmt"
