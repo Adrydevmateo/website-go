@@ -16,7 +16,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
-	_ "github.com/joho/godotenv/autoload"
 )
 
 type Project struct {
@@ -43,23 +42,20 @@ type SignUp struct {
 	Age      int
 }
 
-const MsgErrorReadingRequestBody = "failed reading request body"
 const MsgErrorParsingData = "error parsing data"
-const MsgErrorGeneratingJwt = "error generating jwt"
+
 const MsgErrorInvalidEmail = "invalid email format"
 const MsgErrorMatchingRegex = "error matching regex"
-const TokenExpTime = time.Minute * 5
 
 var tokenAuth *jwtauth.JWTAuth
 var user User
 
 func init() {
-	fmt.Println(config.Shared.JWTSecret)
-	tokenAuth = jwtauth.New("HS256", []byte(config.Shared.JWTSecret), nil)
+	tokenAuth = jwtauth.New(config.JWTAlgo.GetValue(), []byte(config.JWTSecret.GetValue()), nil)
 }
 
 func main() {
-	http.ListenAndServe(":3000", router())
+	http.ListenAndServe(fmt.Sprintf(":%s", config.PORT.GetValue()), router())
 }
 
 func router() http.Handler {
@@ -108,7 +104,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
-		w.Write([]byte(MsgErrorReadingRequestBody))
+		w.Write([]byte(config.MsgErrorReadingRequestBody))
 		return
 	}
 	var signInData SignIn
@@ -136,10 +132,10 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user = User{Fullname: "Adry Mateo Ramon", Email: signInData.Email, Age: 26}
 	claims := map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age}
-	jwtauth.SetExpiry(claims, time.Now().Add(TokenExpTime))
+	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	_, tokenString, tokenErr := tokenAuth.Encode(claims)
 	if tokenErr != nil {
-		w.Write([]byte(MsgErrorGeneratingJwt))
+		w.Write([]byte(config.MsgErrorGeneratingJwt))
 		return
 	}
 	w.Write([]byte(tokenString))
@@ -149,7 +145,7 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
-		w.Write([]byte(MsgErrorReadingRequestBody))
+		w.Write([]byte(config.MsgErrorReadingRequestBody))
 		return
 	}
 	var signUpData SignUp
@@ -169,9 +165,9 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	claims := map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age}
 	_, tokenString, err := tokenAuth.Encode(claims)
-	jwtauth.SetExpiry(claims, time.Now().Add(TokenExpTime))
+	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	if err != nil {
-		w.Write([]byte(MsgErrorGeneratingJwt))
+		w.Write([]byte(config.MsgErrorGeneratingJwt))
 		return
 	}
 	w.Write([]byte(tokenString))
