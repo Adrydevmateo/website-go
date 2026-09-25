@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"regexp"
 	"time"
+
+	"website.com/backend/config"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,10 +18,6 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	_ "github.com/joho/godotenv/autoload"
 )
-
-type Config struct {
-	JWTSecret string
-}
 
 type Project struct {
 	Name    string
@@ -57,22 +54,12 @@ var tokenAuth *jwtauth.JWTAuth
 var user User
 
 func init() {
-	loadConfig, err := LoadConfig()
-	if err != nil {
-		panic("failed to load configuration")
-	}
-	tokenAuth = jwtauth.New("HS256", []byte(loadConfig.JWTSecret), nil)
+	fmt.Println(config.Shared.JWTSecret)
+	tokenAuth = jwtauth.New("HS256", []byte(config.Shared.JWTSecret), nil)
 }
 
 func main() {
 	http.ListenAndServe(":3000", router())
-}
-
-func LoadConfig() (*Config, error) {
-	cfg := &Config{
-		JWTSecret: os.Getenv("JWT_SECRET"),
-	}
-	return cfg, nil
 }
 
 func router() http.Handler {
