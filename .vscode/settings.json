@@ -1,0 +1,9 @@
+{
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"editor.tabSize": 4,
+	"cSpell.words": [
+		"godotenv",
+		"joho"
+	]
+}
