@@ -25,7 +25,7 @@ func Router() http.Handler {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	// TODO: finish thi ip setup
+	// TODO: finish this ip setup
 	r.Use(middleware.ClientIPFromHeader("CF-Connecting-IP"))
 	// TODO: create an env var to manage number of request
 	r.Use(httprate.LimitBy(10, time.Minute, rateLimitMiddlewareHandler))

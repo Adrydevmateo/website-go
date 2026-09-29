@@ -12,8 +12,8 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 
 	"website.com/backend/config"
-	"website.com/backend/internal"
 	auth "website.com/backend/internal/auth"
+	constant "website.com/backend/internal/constant"
 )
 
 func rateLimitMiddlewareHandler(r *http.Request) (string, error) {
@@ -35,13 +35,13 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
 		// TODO: move this to constants
-		w.Write([]byte(config.MsgErrorReadingRequestBody))
+		w.Write([]byte(constant.MsgErrorReadingRequestBody))
 		return
 	}
 	var signInData auth.SignIn
 	jsonErr := json.Unmarshal(body, &signInData)
 	if jsonErr != nil {
-		w.Write([]byte(internal.MsgErrorParsingData))
+		w.Write([]byte(constant.MsgErrorParsingData))
 		return
 	}
 	user, err := auth.SignInCase(signInData)
@@ -52,7 +52,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	_, tokenString, tokenErr := tokenAuth.Encode(claims)
 	if tokenErr != nil {
-		w.Write([]byte(config.MsgErrorGeneratingJwt))
+		w.Write([]byte(constant.MsgErrorGeneratingJwt))
 		return
 	}
 	w.Write([]byte(tokenString))
@@ -62,29 +62,34 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
-		w.Write([]byte(config.MsgErrorReadingRequestBody))
+		w.Write([]byte(constant.MsgErrorReadingRequestBody))
 		return
 	}
 	var signUpData auth.SignUp
 	jsonErr := json.Unmarshal(body, &signUpData)
 	if jsonErr != nil {
-		w.Write([]byte(internal.MsgErrorParsingData))
+		w.Write([]byte(constant.MsgErrorParsingData))
 		return
 	}
 	emailRegexMatch, emailRegexError := regexp.Match("@", []byte(signUpData.Email))
 	if emailRegexError != nil {
-		w.Write([]byte(internal.MsgErrorMatchingRegex))
+		w.Write([]byte(constant.MsgErrorMatchingRegex))
 		return
 	}
 	if !emailRegexMatch {
-		w.Write([]byte(internal.MsgErrorInvalidEmail))
+		w.Write([]byte(constant.MsgErrorInvalidEmail))
 		return
 	}
-	claims := map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age}
+	newUser, errSignUpCase := auth.SignUpCase(signUpData)
+	if errSignUpCase != nil {
+		w.Write([]byte(errSignUpCase.Error()))
+		return
+	}
+	claims := map[string]any{"Fullname": newUser.Fullname, "Email": newUser.Email, "Age": newUser.Age}
 	_, tokenString, err := tokenAuth.Encode(claims)
 	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	if err != nil {
-		w.Write([]byte(config.MsgErrorGeneratingJwt))
+		w.Write([]byte(constant.MsgErrorGeneratingJwt))
 		return
 	}
 	w.Write([]byte(tokenString))
@@ -97,7 +102,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	project := auth.Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
 	j, err := json.Marshal(project)
 	if err != nil {
-		w.Write([]byte(internal.MsgErrorParsingData))
+		w.Write([]byte(constant.MsgErrorParsingData))
 		return
 	}
 	w.Write(j)
