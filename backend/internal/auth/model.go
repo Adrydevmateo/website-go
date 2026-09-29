@@ -1,11 +1,5 @@
 package auth
 
-type Project struct {
-	Name    string
-	Banner  string
-	LiveURL string
-}
-
 type User struct {
 	Fullname string
 	Email    string

@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"regexp"
@@ -14,6 +13,7 @@ import (
 	"website.com/backend/config"
 	auth "website.com/backend/internal/auth"
 	constant "website.com/backend/internal/constant"
+	"website.com/backend/internal/project"
 )
 
 func rateLimitMiddlewareHandler(r *http.Request) (string, error) {
@@ -96,11 +96,12 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func projectsHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: get projects from a list
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	fmt.Println(claims)
-	project := auth.Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
-	j, err := json.Marshal(project)
+	projects, errProjects := project.ListProjectsCase()
+	if errProjects != nil {
+		w.Write([]byte(errProjects.Error()))
+		return
+	}
+	j, err := json.Marshal(projects)
 	if err != nil {
 		w.Write([]byte(constant.MsgErrorParsingData))
 		return
