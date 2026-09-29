@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"website.com/backend/config"
-	v1 "website.com/backend/internal/router/v1"
+	v1 "website.com/backend/internal/api/v1"
 )
 
 func main() {
