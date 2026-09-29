@@ -13,10 +13,6 @@ import (
 	"website.com/backend/config"
 )
 
-const MsgErrorParsingData = "error parsing data"
-const MsgErrorInvalidEmail = "invalid email format"
-const MsgErrorMatchingRegex = "error matching regex"
-
 var tokenAuth *jwtauth.JWTAuth
 
 func init() {

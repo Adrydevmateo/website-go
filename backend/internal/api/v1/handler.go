@@ -12,10 +12,9 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 
 	"website.com/backend/config"
+	"website.com/backend/internal"
 	auth "website.com/backend/internal/auth"
 )
-
-var user auth.User
 
 func rateLimitMiddlewareHandler(r *http.Request) (string, error) {
 	return httprate.CanonicalizeIP(middleware.GetClientIP(r.Context())), nil
@@ -35,33 +34,20 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
+		// TODO: move this to constants
 		w.Write([]byte(config.MsgErrorReadingRequestBody))
 		return
 	}
 	var signInData auth.SignIn
 	jsonErr := json.Unmarshal(body, &signInData)
 	if jsonErr != nil {
-		w.Write([]byte(MsgErrorParsingData))
+		w.Write([]byte(internal.MsgErrorParsingData))
 		return
 	}
-	emailRegexMatch, emailRegexError := regexp.Match("@", []byte(signInData.Email))
-	if emailRegexError != nil {
-		w.Write([]byte(MsgErrorMatchingRegex))
-		return
+	user, err := auth.SignInCase(signInData)
+	if err != nil {
+		w.Write([]byte(err.Error()))
 	}
-	if !emailRegexMatch {
-		w.Write([]byte(MsgErrorInvalidEmail))
-		return
-	}
-	if signInData.Email != "test@gmail.com" {
-		w.Write([]byte("this user email does not exist"))
-		return
-	}
-	if signInData.Password != "123" {
-		w.Write([]byte("this password is incorrect"))
-		return
-	}
-	user = auth.User{Fullname: "Adry Mateo Ramon", Email: signInData.Email, Age: 26}
 	claims := map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age}
 	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	_, tokenString, tokenErr := tokenAuth.Encode(claims)
@@ -82,16 +68,16 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 	var signUpData auth.SignUp
 	jsonErr := json.Unmarshal(body, &signUpData)
 	if jsonErr != nil {
-		w.Write([]byte(MsgErrorParsingData))
+		w.Write([]byte(internal.MsgErrorParsingData))
 		return
 	}
 	emailRegexMatch, emailRegexError := regexp.Match("@", []byte(signUpData.Email))
 	if emailRegexError != nil {
-		w.Write([]byte(MsgErrorMatchingRegex))
+		w.Write([]byte(internal.MsgErrorMatchingRegex))
 		return
 	}
 	if !emailRegexMatch {
-		w.Write([]byte(MsgErrorInvalidEmail))
+		w.Write([]byte(internal.MsgErrorInvalidEmail))
 		return
 	}
 	claims := map[string]any{"Fullname": signUpData.Fullname, "Email": signUpData.Email, "Age": signUpData.Age}
@@ -111,7 +97,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	project := auth.Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
 	j, err := json.Marshal(project)
 	if err != nil {
-		w.Write([]byte(MsgErrorParsingData))
+		w.Write([]byte(internal.MsgErrorParsingData))
 		return
 	}
 	w.Write(j)
