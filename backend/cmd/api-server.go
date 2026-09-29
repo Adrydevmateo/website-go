@@ -1,6 +1,7 @@
 package main
 
 // TODO: separate into files
+// TODO: make sure to handle logging
 // TODO: return data encrypted
 import (
 	"fmt"

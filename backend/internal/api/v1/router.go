@@ -9,38 +9,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
+
 	"website.com/backend/config"
 )
-
-type Project struct {
-	Name    string
-	Banner  string
-	LiveURL string
-}
-
-type User struct {
-	Fullname string
-	Email    string
-	Age      int
-}
-
-type SignIn struct {
-	Email    string
-	Password string
-}
-
-type SignUp struct {
-	Fullname string
-	Email    string
-	Password string
-	Age      int
-}
 
 const MsgErrorParsingData = "error parsing data"
 const MsgErrorInvalidEmail = "invalid email format"
 const MsgErrorMatchingRegex = "error matching regex"
-
-var user User
 
 var tokenAuth *jwtauth.JWTAuth
 

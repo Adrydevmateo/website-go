@@ -10,8 +10,12 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
+
 	"website.com/backend/config"
+	auth "website.com/backend/internal/auth"
 )
+
+var user auth.User
 
 func rateLimitMiddlewareHandler(r *http.Request) (string, error) {
 	return httprate.CanonicalizeIP(middleware.GetClientIP(r.Context())), nil
@@ -34,7 +38,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(config.MsgErrorReadingRequestBody))
 		return
 	}
-	var signInData SignIn
+	var signInData auth.SignIn
 	jsonErr := json.Unmarshal(body, &signInData)
 	if jsonErr != nil {
 		w.Write([]byte(MsgErrorParsingData))
@@ -57,7 +61,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("this password is incorrect"))
 		return
 	}
-	user = User{Fullname: "Adry Mateo Ramon", Email: signInData.Email, Age: 26}
+	user = auth.User{Fullname: "Adry Mateo Ramon", Email: signInData.Email, Age: 26}
 	claims := map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age}
 	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	_, tokenString, tokenErr := tokenAuth.Encode(claims)
@@ -75,7 +79,7 @@ func signUpHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(config.MsgErrorReadingRequestBody))
 		return
 	}
-	var signUpData SignUp
+	var signUpData auth.SignUp
 	jsonErr := json.Unmarshal(body, &signUpData)
 	if jsonErr != nil {
 		w.Write([]byte(MsgErrorParsingData))
@@ -104,7 +108,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: get projects from a list
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	fmt.Println(claims)
-	project := Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
+	project := auth.Project{Name: "Website", Banner: "Banner", LiveURL: "Live URL"}
 	j, err := json.Marshal(project)
 	if err != nil {
 		w.Write([]byte(MsgErrorParsingData))
