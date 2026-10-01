@@ -2,18 +2,18 @@ package v1
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
-	"regexp"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 
 	"website.com/backend/config"
+	"website.com/backend/internal/project"
+	"website.com/backend/internal/util"
+
 	auth "website.com/backend/internal/auth"
 	constant "website.com/backend/internal/constant"
-	"website.com/backend/internal/project"
 )
 
 func rateLimitMiddlewareHandler(r *http.Request) (string, error) {
@@ -31,23 +31,28 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signInHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	body, readErr := io.ReadAll(r.Body)
-	if readErr != nil {
-		// TODO: move this to constants
-		w.Write([]byte(constant.MsgErrorReadingRequestBody))
+	body, bodyErr := util.GetRequestBody(r)
+	if bodyErr != nil {
+		w.Write([]byte(bodyErr.Error()))
 		return
 	}
 	var signInData auth.SignIn
-	jsonErr := json.Unmarshal(body, &signInData)
+	jsonErr := util.ParseJSONEncodedData(body, &signInData)
 	if jsonErr != nil {
-		w.Write([]byte(constant.MsgErrorParsingData))
+		w.Write([]byte(jsonErr.Error()))
+		return
+	}
+	_, validEmailError := util.ValidateEmail(signInData.Email, "@")
+	if validEmailError != nil {
+		w.Write([]byte(validEmailError.Error()))
 		return
 	}
 	user, err := auth.SignInCase(signInData)
 	if err != nil {
 		w.Write([]byte(err.Error()))
+		return
 	}
+	// TODO: create a util for jwt generation
 	claims := map[string]any{"Fullname": user.Fullname, "Email": user.Email, "Age": user.Age}
 	jwtauth.SetExpiry(claims, config.GetJWTExpTime())
 	_, tokenString, tokenErr := tokenAuth.Encode(claims)
@@ -59,25 +64,20 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func signUpHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	body, readErr := io.ReadAll(r.Body)
-	if readErr != nil {
-		w.Write([]byte(constant.MsgErrorReadingRequestBody))
+	body, bodyErr := util.GetRequestBody(r)
+	if bodyErr != nil {
+		w.Write([]byte(bodyErr.Error()))
 		return
 	}
 	var signUpData auth.SignUp
-	jsonErr := json.Unmarshal(body, &signUpData)
+	jsonErr := util.ParseJSONEncodedData(body, &signUpData)
 	if jsonErr != nil {
-		w.Write([]byte(constant.MsgErrorParsingData))
+		w.Write([]byte(jsonErr.Error()))
 		return
 	}
-	emailRegexMatch, emailRegexError := regexp.Match("@", []byte(signUpData.Email))
-	if emailRegexError != nil {
-		w.Write([]byte(constant.MsgErrorMatchingRegex))
-		return
-	}
-	if !emailRegexMatch {
-		w.Write([]byte(constant.MsgErrorInvalidEmail))
+	_, validEmailError := util.ValidateEmail(signUpData.Email, "@")
+	if validEmailError != nil {
+		w.Write([]byte(validEmailError.Error()))
 		return
 	}
 	newUser, errSignUpCase := auth.SignUpCase(signUpData)
