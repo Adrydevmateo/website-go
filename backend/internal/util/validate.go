@@ -8,8 +8,8 @@ import (
 )
 
 func ValidateEmail(email string, pattern string) (bool, error) {
-	emailRegexMatch, emailRegexError := regexp.Match(pattern, []byte(email))
-	if emailRegexError != nil {
+	emailRegexMatch, err := regexp.Match(pattern, []byte(email))
+	if err != nil {
 		return false, errors.New(constant.MsgErrorMatchingRegex)
 	}
 	if !emailRegexMatch {

@@ -1,6 +1,6 @@
 package main
 
-// TODO: separate into files
+// TODO: create api's version 2
 // TODO: make sure to handle logging
 // TODO: return data encrypted
 import (
