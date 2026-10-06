@@ -2,31 +2,33 @@ import Logger from "../../utils/logger";
 
 export default async function Projects() {
 	const data = await getData();
-	Logger.debug('Debugger')
-	Logger.error('Erroring')
-	Logger.info('Information')
-	Logger.warn('Warm')
 	return (
 		<div>
 			<h1>Projects</h1>
+			{data.projects.map((project) => (
+				<div key={project.id}>
+					<p>{project.title}</p>
+				</div>
+			))}
 		</div>
-	)
+	);
 }
 
 async function getData() {
 	const data = {
-		projects: []
+		projects: [],
 	};
 	try {
-		const fetched = await fetch('https://jsonplaceholder.typicode.com/posts/')
+		const fetched = await fetch("https://jsonplaceholder.typicode.com/posts/");
 		if (!fetched.ok) {
-			throw new Error('Exploded');
+			if (fetched.status === 404) {
+				throw new Error("Could not fetch projects, url not found");
+			}
 		}
-		// console.log('AFTER EXPLODE')
-		const parsed = await fetched.json()
-		data.projects = parsed
-	} catch (error) {
-		// console.error(error)
+		const parsed = await fetched.json();
+		data.projects = parsed;
+	} catch (error: unknown) {
+		if (error instanceof Error) Logger.error(error.message);
 	}
 	return data;
 }
