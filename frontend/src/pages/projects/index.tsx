@@ -1,13 +1,16 @@
+import { Link } from "waku";
 import Logger from "../../utils/logger";
 
-export default async function Projects() {
+export default async function ProjectsPage() {
 	const data = await getData();
 	return (
 		<div>
 			<h1>Projects</h1>
 			{data.projects.map((project) => (
 				<div key={project.id}>
-					<p>{project.title}</p>
+					<Link to={{ to: "/projects/[project]", params: { project: "1" } }}>
+						{project.title}
+					</Link>
 				</div>
 			))}
 		</div>
