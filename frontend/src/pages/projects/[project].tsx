@@ -1,34 +1,35 @@
 import type { PageProps } from "waku/router";
 import Logger from "../../utils/logger";
+import FetchUtil from "../../utils/fetch";
+
+interface IProject {
+  "userId": number,
+  "id": number,
+  "title": string,
+  "body": string
+}
 
 export default async function ProjectPage({project}: PageProps<'/projects/[project]'>) {
-	const data = await getData(project);
-
+	const {data, ok} = await getData(project);
+	if(!ok) {
+		return (
+			<div>
+				<h1>Sorry we couldn't retrieve the projects</h1>
+				<p>Try again in a couple minutes</p>
+			</div>
+		)
+	}
 	return (
 		<div>
-			<h1>{data.data.title}</h1>
+			<h1>{data?.title}</h1>
+			<p>{data?.body}</p>
 			<p>{project}</p>
 		</div>
 	);
 }
 
 const getData = async (projectId: string) => {
-	const project = {};
-
-	try {
-		const fetched = await fetch(`https://jsonplaceholder.typicode.com/posts/${projectId}`);
-		if (!fetched.ok) {
-			if (fetched.status === 404) {
-				throw new Error("Could not fetch projects, url not found");
-			}
-		}
-		const parsed = await fetched.json();
-		project.data = parsed;
-	} catch (error: unknown) {
-		if (error instanceof Error) Logger.error(error.message);
-	}
-
-	return project;
+	return await FetchUtil<IProject>(`/posts/${projectId}`);
 };
 
 export const getConfig = async () => {

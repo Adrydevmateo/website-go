@@ -17,12 +17,14 @@ export default async function ProjectsPage() {
 	);
 }
 
+// TODO: fetch projects from backend
 async function getData() {
 	const data = {
 		projects: [],
 	};
+	// TODO: create a util for fetching
 	try {
-		const fetched = await fetch("https://jsonplaceholder.typicode.com/posts/");
+		const fetched = await fetch(`${process.env.API_URL}/posts/`);
 		if (!fetched.ok) {
 			if (fetched.status === 404) {
 				throw new Error("Could not fetch projects, url not found");
