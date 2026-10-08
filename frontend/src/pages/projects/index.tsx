@@ -1,12 +1,35 @@
 import { Link } from "waku";
-import Logger from "../../utils/logger";
+import FetchUtil from "../../utils/fetch";
+
+// TODO: move to a file
+interface IProject {
+	userId: number;
+	id: number;
+	title: string;
+	body: string;
+}
 
 export default async function ProjectsPage() {
-	const data = await getData();
+	const { projects } = await getData();
+	if (!projects.ok) {
+		return (
+			<div>
+				<h1>Sorry we couldn't retrieve the projects</h1>
+				<p>Try again in a couple minutes</p>
+			</div>
+		);
+	}
+	if (!projects.data || projects.data.length === 0) {
+		return (
+			<div>
+				<h1>Sorry, we currently don't have available projects</h1>
+			</div>
+		);
+	}
 	return (
 		<div>
 			<h1>Projects</h1>
-			{data.projects.map((project) => (
+			{projects.data.map((project) => (
 				<div key={project.id}>
 					<Link to={{ to: "/projects/[project]", params: { project: "1" } }}>
 						{project.title}
@@ -17,25 +40,16 @@ export default async function ProjectsPage() {
 	);
 }
 
+interface IData {
+	projects: Awaited<ReturnType<typeof FetchUtil<Array<IProject>>>>;
+}
+
 // TODO: fetch projects from backend
 async function getData() {
-	const data = {
-		projects: [],
+	const pageData: IData = {
+		projects: await FetchUtil<Array<IProject>>("/posts/"),
 	};
-	// TODO: create a util for fetching
-	try {
-		const fetched = await fetch(`${process.env.API_URL}/posts/`);
-		if (!fetched.ok) {
-			if (fetched.status === 404) {
-				throw new Error("Could not fetch projects, url not found");
-			}
-		}
-		const parsed = await fetched.json();
-		data.projects = parsed;
-	} catch (error: unknown) {
-		if (error instanceof Error) Logger.error(error.message);
-	}
-	return data;
+	return pageData;
 }
 
 export async function getConfig() {

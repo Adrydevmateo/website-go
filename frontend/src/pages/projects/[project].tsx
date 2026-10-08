@@ -14,7 +14,7 @@ export default async function ProjectPage({project}: PageProps<'/projects/[proje
 	if(!ok) {
 		return (
 			<div>
-				<h1>Sorry we couldn't retrieve the projects</h1>
+				<h1>Sorry we couldn't retrieve the project</h1>
 				<p>Try again in a couple minutes</p>
 			</div>
 		)
