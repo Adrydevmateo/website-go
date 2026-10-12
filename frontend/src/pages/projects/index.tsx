@@ -1,13 +1,6 @@
 import { Link } from "waku";
 import FetchUtil from "../../utils/fetch";
-
-// TODO: move to a file
-interface IProject {
-	userId: number;
-	id: number;
-	title: string;
-	body: string;
-}
+import type { IProject } from "./model";
 
 export default async function ProjectsPage() {
 	const { projects } = await getData();
