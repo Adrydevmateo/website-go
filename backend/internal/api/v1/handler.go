@@ -26,15 +26,19 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Health"))
 }
 
+// TODO: add proper status codes
+// TODO: add test cases
 func signInHandler(w http.ResponseWriter, r *http.Request) {
 	body, bodyErr := util.GetRequestBody(r)
 	if bodyErr != nil {
+		w.WriteHeader(400)
 		w.Write([]byte(bodyErr.Error()))
 		return
 	}
 	var signInData auth.SignIn
 	jsonErr := util.ParseJSONEncodedData(body, &signInData)
 	if jsonErr != nil {
+		w.WriteHeader(400)
 		w.Write([]byte(jsonErr.Error()))
 		return
 	}
@@ -45,6 +49,7 @@ func signInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := auth.SignInCase(signInData)
 	if err != nil {
+		w.WriteHeader(401)
 		w.Write([]byte(err.Error()))
 		return
 	}

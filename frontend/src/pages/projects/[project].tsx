@@ -1,5 +1,5 @@
 import type { PageProps } from "waku/router";
-import FetchUtil from "../../utils/fetch";
+import { V1GET } from "../../utils/fetch";
 import type { IProject } from "./model";
 
 export default async function ProjectPage({
@@ -24,7 +24,7 @@ export default async function ProjectPage({
 }
 
 const getData = async (projectId: string) => {
-	return await FetchUtil<IProject>(`/posts/${projectId}`);
+	return await V1GET<IProject>(`/posts/${projectId}`);
 };
 
 export const getConfig = async () => {

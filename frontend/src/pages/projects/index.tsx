@@ -1,5 +1,5 @@
 import { Link } from "waku";
-import FetchUtil from "../../utils/fetch";
+import { V1GET } from "../../utils/fetch";
 import type { IProject } from "./model";
 
 export default async function ProjectsPage() {
@@ -34,13 +34,13 @@ export default async function ProjectsPage() {
 }
 
 interface IData {
-	projects: Awaited<ReturnType<typeof FetchUtil<Array<IProject>>>>;
+	projects: Awaited<ReturnType<typeof V1GET<Array<IProject>>>>;
 }
 
 // TODO: fetch projects from backend
 async function getData() {
 	const pageData: IData = {
-		projects: await FetchUtil<Array<IProject>>("/posts/"),
+		projects: await V1GET<Array<IProject>>("/projects"),
 	};
 	return pageData;
 }

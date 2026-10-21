@@ -4,6 +4,8 @@
 	"editor.tabSize": 4,
 	"cSpell.words": [
 		"godotenv",
+		"IGET",
+		"IPOST",
 		"joho",
 		"waku"
 	]
