@@ -1,4 +1,6 @@
-const allowedLevels = process.env.LOGGER_ALLOWED_LEVELS || ["warn", "error"];
+import { GetEnv } from "./config";
+
+const allowedLevels = GetEnv('VITE_LOGGER_ALLOWED_LEVELS') || ["warn", "error"];
 
 const Logger = {
 	debug: (msg: string, ...args: unknown[]) => {

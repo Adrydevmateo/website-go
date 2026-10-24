@@ -1,10 +1,16 @@
-"use client";
-
+import { AuthTokenAtom } from "@lib/jotai/auth";
+import { GetEnv } from "@utils/config";
+import Logger from "@utils/logger";
 import { useAtom } from "jotai";
-import { AuthTokenAtom } from "../shared/jotai/auth";
-import Logger from "../utils/logger";
 
-export default function SignInForm() {
+export default function AuthForm() {
+
+	return(
+		<SignInForm/>
+	)
+}
+
+function SignInForm() {
 	const [authToken, setAuthToken] = useAtom(AuthTokenAtom);
 
 	async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -12,7 +18,7 @@ export default function SignInForm() {
 		const form = new FormData(e.target);
 		try {
 			const fetched = await fetch(
-				`${import.meta.env.WAKU_PUBLIC_API_URL}/api/v1/signin`,
+				`${GetEnv('VITE_API_URL')}/api/v1/signin`,
 				{
 					method: "POST",
 					body: JSON.stringify({
