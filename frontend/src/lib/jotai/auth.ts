@@ -1,3 +1,3 @@
 import { atom } from "jotai";
 
-export const AuthTokenAtom = atom<string | undefined>()
+export const AuthTokenAtom = atom<string>()
