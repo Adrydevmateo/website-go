@@ -1,21 +1,23 @@
 import { GetEnv } from "./config";
 
-const allowedLevels = GetEnv('VITE_LOGGER_ALLOWED_LEVELS') || ["warn", "error"];
+const allowedLevels = GetEnv("VITE_LOGGER_ALLOWED_LEVELS") || [
+	"table",
+	"warn",
+	"error",
+];
 
 const Logger = {
-	debug: (msg: string, ...args: unknown[]) => {
-		if (allowedLevels.includes("debug"))
-			console.debug(`[DEBUG]: ${msg}`, ...args);
+	Table<T>(msg: T) {
+		if (allowedLevels.includes("table")) console.table(`[DEBUG]:\n${msg}`);
 	},
-	info: (msg: string, ...args: unknown[]) => {
-		if (allowedLevels.includes("info")) console.info(`[INFO]: ${msg}`, ...args);
+	Info<T>(msg: T) {
+		if (allowedLevels.includes("info")) console.info(`[INFO]: ${msg}`);
 	},
-	warn: (msg: string, ...args: unknown[]) => {
-		if (allowedLevels.includes("warn")) console.warn(`[WARN]: ${msg}`, ...args);
+	Warn<T>(msg: T) {
+		if (allowedLevels.includes("warn")) console.warn(`[WARN]: ${msg}`);
 	},
-	error: (msg: string, ...args: unknown[]) => {
-		if (allowedLevels.includes("error"))
-			console.error(`[ERROR]: ${msg}`, ...args);
+	Error<T>(msg: T) {
+		if (allowedLevels.includes("error")) console.error(`[ERROR]: ${msg}`);
 	},
 };
 
