@@ -1,13 +1,12 @@
 import { SignIn } from "@api/v1";
-import store from "@lib/valtio";
+import AuthStore, { UnsubscribeFromAuthStore } from "@lib/auth";
 import { IsEmailValid } from "@utils/form";
-import { useEffect } from "react";
 import { useSnapshot } from "valtio";
 
 type TInputChangeEvent = React.ChangeEvent<HTMLInputElement, HTMLInputElement>;
 
 export default function SignInForm() {
-	const state = useSnapshot(store);
+	const state = useSnapshot(AuthStore);
 
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -43,6 +42,7 @@ export default function SignInForm() {
 			return;
 		}
 		if (data) {
+			// TODO: unsubscribe before redirection => UnsubscribeFromAuthStore()
 			state.setFormState("success");
 			state.setEmail("");
 			state.setPassword("");
@@ -56,29 +56,6 @@ export default function SignInForm() {
 
 	const HandlePasswordChange = ({ target }: TInputChangeEvent) =>
 		state.setPassword(target.value);
-
-	useEffect(() => {
-		if (state.formState === "incomplete") {
-			if (state.email.length >= 1) state.setShowRequiredEmail(false);
-			if (state.password.length >= 1) state.setShowRequiredPassword(false);
-			if (state.email && state.password) state.setFormState("complete");
-		}
-		if (state.formState === "invalid") {
-			if (IsEmailValid(state.email)) state.setShowInvalidEmail(false);
-			if (state.password.length >= 3) state.setShowInvalidPassword(false);
-			if (IsEmailValid(state.email) && state.password.length >= 3)
-				state.setFormState("valid");
-		}
-	}, [
-		state.formState,
-		state.email,
-		state.password,
-		state.setFormState,
-		state.setShowRequiredEmail,
-		state.setShowRequiredPassword,
-		state.setShowInvalidEmail,
-		state.setShowInvalidPassword,
-	]);
 
 	return (
 		<div>
