@@ -1,86 +1,89 @@
 import { SignIn } from "@api/v1";
-import type { TFormState } from "@contracts/form";
+import store from "@lib/valtio";
 import { IsEmailValid } from "@utils/form";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useSnapshot } from "valtio";
 
 type TInputChangeEvent = React.ChangeEvent<HTMLInputElement, HTMLInputElement>;
 
 export default function SignInForm() {
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [formState, setFormState] = useState<TFormState>("idle");
-	const [showIncorrectEmail, setShowIncorrectEmail] = useState(false);
-	const [showIncorrectPassword, setShowIncorrectPassword] = useState(false);
-	const [showInvalidEmail, setShowInvalidEmail] = useState(false);
-	const [showInvalidPassword, setShowInvalidPassword] = useState(false);
-	const [showRequiredEmail, setShowRequiredEmail] = useState(false);
-	const [showRequiredPassword, setShowRequiredPassword] = useState(false);
+	const state = useSnapshot(store);
 
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setFormState("sending");
+		state.setFormState("sending");
 
-		if (!email || !password) {
-			setFormState("incomplete");
-			if (!email) setShowRequiredEmail(true);
-			if (!password) setShowRequiredPassword(true);
+		if (!state.email || !state.password) {
+			state.setFormState("incomplete");
+			if (!state.email) state.setShowRequiredEmail(true);
+			if (!state.password) state.setShowRequiredPassword(true);
 			return;
 		}
 
-		if (!IsEmailValid(email) || password.length < 3) {
-			setFormState("invalid");
-			if (!IsEmailValid(email)) setShowInvalidEmail(true);
-			if (password.length < 3) setShowInvalidPassword(true);
+		if (!IsEmailValid(state.email) || state.password.length < 3) {
+			state.setFormState("invalid");
+			if (!IsEmailValid(state.email)) state.setShowInvalidEmail(true);
+			if (state.password.length < 3) state.setShowInvalidPassword(true);
 			return;
 		}
 
-		if (showIncorrectEmail) setShowIncorrectEmail(false);
-		if (showIncorrectPassword) setShowIncorrectPassword(false);
-		const { ok, data, error } = await SignIn(email, password);
+		if (state.showIncorrectEmail) state.setShowIncorrectEmail(false);
+		if (state.showIncorrectPassword) state.setShowIncorrectPassword(false);
+		const { ok, data, error } = await SignIn(state.email, state.password);
 		if (!ok && !data && !error) {
 			console.log("Try again later");
 			return;
 		}
 		if (error) {
 			if (error.type === "incorrect-value") {
-				setFormState("invalid");
-				if (error.field === "email") setShowIncorrectEmail(true);
-				if (error.field === "password") setShowIncorrectPassword(true);
+				state.setFormState("invalid");
+				if (error.field === "email") state.setShowIncorrectEmail(true);
+				if (error.field === "password") state.setShowIncorrectPassword(true);
 			}
 			return;
 		}
 		if (data) {
-			setFormState("success");
-			setEmail("");
-			setPassword("");
+			state.setFormState("success");
+			state.setEmail("");
+			state.setPassword("");
 			console.log("DATA FROM FETCHING: ", data);
 			return;
 		}
 	};
 
 	const HandleEmailChange = ({ target }: TInputChangeEvent) =>
-		setEmail(target.value);
+		state.setEmail(target.value);
 
 	const HandlePasswordChange = ({ target }: TInputChangeEvent) =>
-		setPassword(target.value);
+		state.setPassword(target.value);
 
 	useEffect(() => {
-		if (formState === "incomplete") {
-			if (email.length >= 1) setShowRequiredEmail(false);
-			if (password.length >= 1) setShowRequiredPassword(false);
-			if (email && password) setFormState("complete");
+		if (state.formState === "incomplete") {
+			if (state.email.length >= 1) state.setShowRequiredEmail(false);
+			if (state.password.length >= 1) state.setShowRequiredPassword(false);
+			if (state.email && state.password) state.setFormState("complete");
 		}
-		if (formState === "invalid") {
-			if (IsEmailValid(email)) setShowInvalidEmail(false);
-			if (password.length >= 3) setShowInvalidPassword(false);
-			if (IsEmailValid(email) && password.length >= 3) setFormState("valid");
+		if (state.formState === "invalid") {
+			if (IsEmailValid(state.email)) state.setShowInvalidEmail(false);
+			if (state.password.length >= 3) state.setShowInvalidPassword(false);
+			if (IsEmailValid(state.email) && state.password.length >= 3)
+				state.setFormState("valid");
 		}
-	}, [formState, email, password]);
+	}, [
+		state.formState,
+		state.email,
+		state.password,
+		state.setFormState,
+		state.setShowRequiredEmail,
+		state.setShowRequiredPassword,
+		state.setShowInvalidEmail,
+		state.setShowInvalidPassword,
+	]);
 
 	return (
 		<div>
-			{formState === "incomplete" && <p>Incomplete</p>}
-			{formState === "invalid" && <p>Invalid</p>}
+			{state.formState === "incomplete" && <p>Incomplete</p>}
+			{state.formState === "invalid" && <p>Invalid</p>}
 			<form onSubmit={HandleSubmit}>
 				<div>
 					<label htmlFor="email">
@@ -90,12 +93,12 @@ export default function SignInForm() {
 						id="email"
 						name="email"
 						type="text"
-						value={email}
+						value={state.email}
 						onChange={HandleEmailChange}
 					/>
-					{showIncorrectEmail && <p>Incorrect email</p>}
-					{showRequiredEmail && <p>Email is required</p>}
-					{showInvalidEmail && <p>Invalid email format</p>}
+					{state.showIncorrectEmail && <p>Incorrect email</p>}
+					{state.showRequiredEmail && <p>Email is required</p>}
+					{state.showInvalidEmail && <p>Invalid email format</p>}
 				</div>
 				<div>
 					<label htmlFor="password">
@@ -106,19 +109,19 @@ export default function SignInForm() {
 						name="password"
 						type="password"
 						autoComplete="off"
-						value={password}
+						value={state.password}
 						onChange={HandlePasswordChange}
 					/>
-					{showIncorrectPassword && <p>Incorrect password</p>}
-					{showRequiredPassword && <p>Password is required</p>}
-					{showInvalidPassword && <p>Invalid password format</p>}
+					{state.showIncorrectPassword && <p>Incorrect password</p>}
+					{state.showRequiredPassword && <p>Password is required</p>}
+					{state.showInvalidPassword && <p>Invalid password format</p>}
 				</div>
 				<button
 					type="submit"
 					disabled={
-						formState === "incomplete" ||
-						formState === "invalid" ||
-						formState === "sending"
+						state.formState === "incomplete" ||
+						state.formState === "invalid" ||
+						state.formState === "sending"
 					}
 				>
 					Send
