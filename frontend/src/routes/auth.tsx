@@ -6,8 +6,9 @@ export const Route = createFileRoute("/auth")({
 	component: RouteComponent,
 });
 type TErrorType = "required" | "incorrect-value" | "incorrect-format";
+type TFormField = "email" | "password";
 type TFormError = {
-	label: "email" | "password";
+	field: TFormField;
 	type: TErrorType;
 };
 function IsEmailValid(email: string) {
@@ -42,12 +43,12 @@ function RouteComponent() {
 				if (res.includes("email"))
 					return {
 						ok: false,
-						error: { label: "email", type: "incorrect-value" },
+						error: { field: "email", type: "incorrect-value" },
 					};
 				if (res.includes("password"))
 					return {
 						ok: false,
-						error: { label: "password", type: "incorrect-value" },
+						error: { field: "password", type: "incorrect-value" },
 					};
 				throw new Error(fetched.statusText);
 			}
@@ -61,36 +62,28 @@ function RouteComponent() {
 		}
 	}
 
+	const IsFoundOnFormErrors = (value: TFormField, type: TErrorType) =>
+		formErrors.find((f) => f.field === value && f.type === type);
+
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setFormState("sending");
-		if (!email || !password) {
-			setFormState("incomplete");
-			const tmp: typeof formErrors = formErrors;
-			if (!email)
-				if (
-					!formErrors.find((f) => f.label === "email" && f.type === "required")
-				)
-					tmp.push({ label: "email", type: "required" });
-			if (!password)
-				if (
-					!formErrors.find(
-						(f) => f.label === "password" && f.type === "required",
-					)
-				)
-					tmp.push({ label: "password", type: "required" });
-			setFormErrors(tmp);
-			return;
-		}
+
+		const tmp: typeof formErrors = formErrors;
+		if (!email)
+			if (!IsFoundOnFormErrors("email", "required"))
+				tmp.push({ field: "email", type: "required" });
+		if (!password)
+			if (!IsFoundOnFormErrors("password", "required"))
+				tmp.push({ field: "password", type: "required" });
+
+		if (tmp.length > 0) return setFormState("incomplete");
+		setFormErrors(tmp);
 
 		const { data, error } = await SignIn(email, password);
 		if (error) {
 			setFormState("incomplete");
-			if (
-				!formErrors.find(
-					(f) => f.label === error.label && f.type === error.type,
-				)
-			)
+			if (!IsFoundOnFormErrors(error.field, error.type))
 				setFormErrors([...formErrors, error]);
 			return;
 		}
@@ -107,7 +100,7 @@ function RouteComponent() {
 		setEmail(currentValue);
 		if (formState === "incomplete")
 			if (IsEmailValid(target.value))
-				setFormErrors(() => formErrors.filter((f) => f.label !== "email"));
+				setFormErrors(() => formErrors.filter((f) => f.field !== "email"));
 	};
 
 	const HandlePasswordChange = ({
@@ -117,7 +110,7 @@ function RouteComponent() {
 		setPassword(currentValue);
 		if (formState === "incomplete")
 			if (currentValue.length >= 3)
-				setFormErrors(() => formErrors.filter((f) => f.label !== "password"));
+				setFormErrors(() => formErrors.filter((f) => f.field !== "password"));
 	};
 
 	useEffect(() => {
@@ -127,11 +120,6 @@ function RouteComponent() {
 	return (
 		<div>
 			{formState === "incomplete" && <p>Incomplete</p>}
-			{formErrors.map((m) => (
-				<div key={m.label}>
-					<p>{m.label}</p>
-				</div>
-			))}
 			<form onSubmit={HandleSubmit}>
 				<div>
 					<label htmlFor="email">
@@ -144,9 +132,8 @@ function RouteComponent() {
 						value={email}
 						onChange={HandleEmailChange}
 					/>
-					{formErrors.find(
-						(f) => f.label === "email" && f.type === "incorrect-value",
-					) && "Incorrect Email"}
+					{IsFoundOnFormErrors("email", "incorrect-value") && "Incorrect email"}
+					{IsFoundOnFormErrors("email", "required") && "Email is required"}
 				</div>
 				<div>
 					<label htmlFor="password">
@@ -160,9 +147,10 @@ function RouteComponent() {
 						value={password}
 						onChange={HandlePasswordChange}
 					/>
-					{formErrors.find(
-						(f) => f.label === "password" && f.type === "incorrect-value",
-					) && "Incorrect Password"}
+					{IsFoundOnFormErrors("password", "incorrect-value") &&
+						"Incorrect Password"}
+					{IsFoundOnFormErrors("password", "required") &&
+						"Password is required"}
 				</div>
 				<button type="submit" disabled={formErrors.length > 0}>
 					Send
