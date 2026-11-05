@@ -1,5 +1,5 @@
+import { SignIn } from "@api/v1";
 import type {
-	ISignInResponse,
 	TErrorType,
 	TFormError,
 	TFormField,
@@ -23,66 +23,48 @@ function RouteComponent() {
 	const [password, setPassword] = useState("");
 	const [formErrors, setFormErrors] = useState<TFormError[]>([]);
 	const [formState, setFormState] = useState<TFormState>("idle");
-
-	async function SignIn(
-		email: string,
-		password: string,
-	): Promise<ISignInResponse> {
-		try {
-			const fetched = await fetch(`${GetEnv("VITE_API_URL")}/api/v1/signin`, {
-				method: "POST",
-				body: JSON.stringify({ email, password }),
-			});
-			const res: string = await fetched.text();
-			if (!fetched.ok) {
-				if (res.includes("email"))
-					return {
-						ok: false,
-						error: { field: "email", type: "incorrect-value" },
-					};
-				if (res.includes("password"))
-					return {
-						ok: false,
-						error: { field: "password", type: "incorrect-value" },
-					};
-				throw new Error(fetched.statusText);
-			}
-			return { ok: true, data: res };
-		} catch (error) {
-			if (error instanceof Error) {
-				// TODO: use logger
-				throw new Error(error.message);
-			}
-			return { ok: false };
-		}
-	}
-
-	const IsFoundOnFormErrors = (value: TFormField, type: TErrorType) =>
-		formErrors.find((f) => f.field === value && f.type === type);
+	const [showIncorrectEmail, setShowIncorrectEmail] = useState(false);
+	const [showIncorrectPassword, setShowIncorrectPassword] = useState(false);
+	const [showInvalidEmail, setShowInvalidEmail] = useState(false);
+	const [showInvalidPassword, setShowInvalidPassword] = useState(false);
+	const [showRequiredEmail, setShowRequiredEmail] = useState(false);
+	const [showRequiredPassword, setShowRequiredPassword] = useState(false);
 
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setFormState("sending");
 
-		const tmp: typeof formErrors = formErrors;
-		if (!email)
-			if (!IsFoundOnFormErrors("email", "required"))
-				tmp.push({ field: "email", type: "required" });
-		if (!password)
-			if (!IsFoundOnFormErrors("password", "required"))
-				tmp.push({ field: "password", type: "required" });
-
-		if (tmp.length > 0) return setFormState("incomplete");
-		setFormErrors(tmp);
-
-		const { data, error } = await SignIn(email, password);
-		if (error) {
+		if (!email || !password) {
 			setFormState("incomplete");
-			if (!IsFoundOnFormErrors(error.field, error.type))
-				setFormErrors([...formErrors, error]);
+			if (!email) setShowRequiredEmail(true);
+			if (!password) setShowRequiredPassword(true);
+			return;
+		}
+
+		if (!IsEmailValid(email) || password.length < 3) {
+			setFormState("invalid");
+			if (!IsEmailValid(email)) setShowInvalidEmail(true);
+			if (password.length < 3) setShowInvalidPassword(true);
+			return;
+		}
+
+		if (showIncorrectEmail) setShowIncorrectEmail(false);
+		if (showIncorrectPassword) setShowIncorrectPassword(false);
+		const { ok, data, error } = await SignIn(email, password);
+		if (!ok && !data && !error) {
+			console.log("Try again later");
+			return;
+		}
+		if (error) {
+			if (error.field === "email" || error.field === "password") {
+				setFormState("invalid");
+				if (error.field === "email") setShowIncorrectEmail(true);
+				if (error.field === "password") setShowIncorrectPassword(true);
+			}
 			return;
 		}
 		if (data) {
+			setFormState("success");
 			console.log("DATA FROM FETCHING: ", data);
 			return;
 		}
@@ -94,8 +76,10 @@ function RouteComponent() {
 		const currentValue = target.value;
 		setEmail(currentValue);
 		if (formState === "incomplete")
-			if (IsEmailValid(target.value))
-				setFormErrors(() => formErrors.filter((f) => f.field !== "email"));
+			if (currentValue.length >= 1) setShowRequiredEmail(false);
+		if (formState === "invalid") {
+			if (IsEmailValid(target.value)) setShowInvalidEmail(false);
+		}
 	};
 
 	const HandlePasswordChange = ({
@@ -104,17 +88,26 @@ function RouteComponent() {
 		const currentValue = target.value;
 		setPassword(currentValue);
 		if (formState === "incomplete")
-			if (currentValue.length >= 3)
-				setFormErrors(() => formErrors.filter((f) => f.field !== "password"));
+			if (currentValue.length >= 1) setShowRequiredPassword(false);
+		if (formState === "invalid")
+			if (currentValue.length >= 3) setShowInvalidPassword(false);
 	};
 
 	useEffect(() => {
-		if (formErrors.length < 1) setFormState("complete");
-	}, [formErrors]);
+		if (formState === "incomplete")
+			if (email && password) setFormState("complete");
+		if (formState === "invalid")
+			if (IsEmailValid(email) && password.length >= 3) setFormState("valid");
+		if (formState === "success") {
+			setEmail("");
+			setPassword("");
+		}
+	}, [formState, email, password]);
 
 	return (
 		<div>
 			{formState === "incomplete" && <p>Incomplete</p>}
+			{formState === "invalid" && <p>Invalid</p>}
 			<form onSubmit={HandleSubmit}>
 				<div>
 					<label htmlFor="email">
@@ -127,8 +120,9 @@ function RouteComponent() {
 						value={email}
 						onChange={HandleEmailChange}
 					/>
-					{IsFoundOnFormErrors("email", "incorrect-value") && "Incorrect email"}
-					{IsFoundOnFormErrors("email", "required") && "Email is required"}
+					{showIncorrectEmail && <p>Incorrect email</p>}
+					{showRequiredEmail && <p>Email is required</p>}
+					{showInvalidEmail && <p>Invalid email format</p>}
 				</div>
 				<div>
 					<label htmlFor="password">
@@ -142,14 +136,11 @@ function RouteComponent() {
 						value={password}
 						onChange={HandlePasswordChange}
 					/>
-					{IsFoundOnFormErrors("password", "incorrect-value") &&
-						"Incorrect Password"}
-					{IsFoundOnFormErrors("password", "required") &&
-						"Password is required"}
+					{showIncorrectPassword && <p>Incorrect password</p>}
+					{showRequiredPassword && <p>Password is required</p>}
+					{showInvalidPassword && <p>Invalid password format</p>}
 				</div>
-				<button type="submit" disabled={formErrors.length > 0}>
-					Send
-				</button>
+				<button type="submit">Send</button>
 			</form>
 		</div>
 	);
