@@ -10,6 +10,10 @@ type TFormError = {
 	label: "email" | "password";
 	type: TErrorType;
 };
+function IsEmailValid(email: string) {
+	const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return regex.test(email);
+}
 function RouteComponent() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -60,15 +64,15 @@ function RouteComponent() {
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setFormState("sending");
-		if (email.length < 1 || password.length < 1) {
+		if (!email || !password) {
 			setFormState("incomplete");
 			const tmp: typeof formErrors = formErrors;
-			if (email.length < 1)
+			if (!email)
 				if (
 					!formErrors.find((f) => f.label === "email" && f.type === "required")
 				)
 					tmp.push({ label: "email", type: "required" });
-			if (password.length < 1)
+			if (!password)
 				if (
 					!formErrors.find(
 						(f) => f.label === "password" && f.type === "required",
@@ -102,7 +106,7 @@ function RouteComponent() {
 		const currentValue = target.value;
 		setEmail(currentValue);
 		if (formState === "incomplete")
-			if (currentValue.includes("@"))
+			if (IsEmailValid(target.value))
 				setFormErrors(() => formErrors.filter((f) => f.label !== "email"));
 	};
 
@@ -112,7 +116,7 @@ function RouteComponent() {
 		const currentValue = target.value;
 		setPassword(currentValue);
 		if (formState === "incomplete")
-			if (currentValue.length > 3)
+			if (currentValue.length >= 3)
 				setFormErrors(() => formErrors.filter((f) => f.label !== "password"));
 	};
 
@@ -160,7 +164,9 @@ function RouteComponent() {
 						(f) => f.label === "password" && f.type === "incorrect-value",
 					) && "Incorrect Password"}
 				</div>
-				<button type="submit" disabled={formErrors.length > 0}>Send</button>
+				<button type="submit" disabled={formErrors.length > 0}>
+					Send
+				</button>
 			</form>
 		</div>
 	);
