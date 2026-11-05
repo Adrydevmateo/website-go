@@ -1,13 +1,9 @@
 import { SignIn } from "@api/v1";
-import type {
-	TErrorType,
-	TFormError,
-	TFormField,
-	TFormState,
-} from "@contracts/form";
+import type { TFormState } from "@contracts/form";
 import { createFileRoute } from "@tanstack/react-router";
-import { GetEnv } from "@utils/config";
 import { useEffect, useState } from "react";
+
+type TInputChangeEvent = React.ChangeEvent<HTMLInputElement, HTMLInputElement>;
 
 export const Route = createFileRoute("/auth")({
 	component: RouteComponent,
@@ -21,7 +17,6 @@ function IsEmailValid(email: string) {
 function RouteComponent() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const [formErrors, setFormErrors] = useState<TFormError[]>([]);
 	const [formState, setFormState] = useState<TFormState>("idle");
 	const [showIncorrectEmail, setShowIncorrectEmail] = useState(false);
 	const [showIncorrectPassword, setShowIncorrectPassword] = useState(false);
@@ -56,7 +51,7 @@ function RouteComponent() {
 			return;
 		}
 		if (error) {
-			if (error.field === "email" || error.field === "password") {
+			if (error.type === "incorrect-value") {
 				setFormState("invalid");
 				if (error.field === "email") setShowIncorrectEmail(true);
 				if (error.field === "password") setShowIncorrectPassword(true);
@@ -65,42 +60,29 @@ function RouteComponent() {
 		}
 		if (data) {
 			setFormState("success");
+			setEmail("");
+			setPassword("");
 			console.log("DATA FROM FETCHING: ", data);
 			return;
 		}
 	};
 
-	const HandleEmailChange = ({
-		target,
-	}: React.ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-		const currentValue = target.value;
-		setEmail(currentValue);
-		if (formState === "incomplete")
-			if (currentValue.length >= 1) setShowRequiredEmail(false);
-		if (formState === "invalid") {
-			if (IsEmailValid(target.value)) setShowInvalidEmail(false);
-		}
-	};
+	const HandleEmailChange = ({ target }: TInputChangeEvent) =>
+		setEmail(target.value);
 
-	const HandlePasswordChange = ({
-		target,
-	}: React.ChangeEvent<HTMLInputElement, HTMLInputElement>) => {
-		const currentValue = target.value;
-		setPassword(currentValue);
-		if (formState === "incomplete")
-			if (currentValue.length >= 1) setShowRequiredPassword(false);
-		if (formState === "invalid")
-			if (currentValue.length >= 3) setShowInvalidPassword(false);
-	};
+	const HandlePasswordChange = ({ target }: TInputChangeEvent) =>
+		setPassword(target.value);
 
 	useEffect(() => {
-		if (formState === "incomplete")
+		if (formState === "incomplete") {
+			if (email.length >= 1) setShowRequiredEmail(false);
+			if (password.length >= 1) setShowRequiredPassword(false);
 			if (email && password) setFormState("complete");
-		if (formState === "invalid")
+		}
+		if (formState === "invalid") {
+			if (IsEmailValid(email)) setShowInvalidEmail(false);
+			if (password.length >= 3) setShowInvalidPassword(false);
 			if (IsEmailValid(email) && password.length >= 3) setFormState("valid");
-		if (formState === "success") {
-			setEmail("");
-			setPassword("");
 		}
 	}, [formState, email, password]);
 
@@ -140,7 +122,16 @@ function RouteComponent() {
 					{showRequiredPassword && <p>Password is required</p>}
 					{showInvalidPassword && <p>Invalid password format</p>}
 				</div>
-				<button type="submit">Send</button>
+				<button
+					type="submit"
+					disabled={
+						formState === "incomplete" ||
+						formState === "invalid" ||
+						formState === "sending"
+					}
+				>
+					Send
+				</button>
 			</form>
 		</div>
 	);
