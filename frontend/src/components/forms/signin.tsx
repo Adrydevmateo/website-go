@@ -10,24 +10,24 @@ export default function SignInForm() {
 
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		state.setFormState("sending");
+		state.SetFormState("sending");
 
 		if (!state.email || !state.password) {
-			state.setFormState("incomplete");
-			if (!state.email) state.setShowRequiredEmail(true);
-			if (!state.password) state.setShowRequiredPassword(true);
+			state.SetFormState("incomplete");
+			if (!state.email) state.SetShowRequiredEmail(true);
+			if (!state.password) state.SetShowRequiredPassword(true);
 			return;
 		}
 
 		if (!IsEmailValid(state.email) || state.password.length < 3) {
-			state.setFormState("invalid");
-			if (!IsEmailValid(state.email)) state.setShowInvalidEmail(true);
-			if (state.password.length < 3) state.setShowInvalidPassword(true);
+			state.SetFormState("invalid");
+			if (!IsEmailValid(state.email)) state.SetShowInvalidEmail(true);
+			if (state.password.length < 3) state.SetShowInvalidPassword(true);
 			return;
 		}
 
-		if (state.showIncorrectEmail) state.setShowIncorrectEmail(false);
-		if (state.showIncorrectPassword) state.setShowIncorrectPassword(false);
+		if (state.showIncorrectEmail) state.SetShowIncorrectEmail(false);
+		if (state.showIncorrectPassword) state.SetShowIncorrectPassword(false);
 		const { ok, data, error } = await SignIn(state.email, state.password);
 		if (!ok && !data && !error) {
 			console.log("Try again later");
@@ -35,27 +35,27 @@ export default function SignInForm() {
 		}
 		if (error) {
 			if (error.type === "incorrect-value") {
-				state.setFormState("invalid");
-				if (error.field === "email") state.setShowIncorrectEmail(true);
-				if (error.field === "password") state.setShowIncorrectPassword(true);
+				state.SetFormState("invalid");
+				if (error.field === "email") state.SetShowIncorrectEmail(true);
+				if (error.field === "password") state.SetShowIncorrectPassword(true);
 			}
 			return;
 		}
 		if (data) {
 			// TODO: unsubscribe before redirection => UnsubscribeFromAuthStore()
-			state.setFormState("success");
-			state.setEmail("");
-			state.setPassword("");
+			state.SetFormState("success");
+			state.SetEmail("");
+			state.SetPassword("");
 			console.log("DATA FROM FETCHING: ", data);
 			return;
 		}
 	};
 
 	const HandleEmailChange = ({ target }: TInputChangeEvent) =>
-		state.setEmail(target.value);
+		state.SetEmail(target.value);
 
 	const HandlePasswordChange = ({ target }: TInputChangeEvent) =>
-		state.setPassword(target.value);
+		state.SetPassword(target.value);
 
 	return (
 		<div>

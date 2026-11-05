@@ -13,15 +13,15 @@ interface IAuthStore {
 	showRequiredEmail: boolean;
 	showRequiredPassword: boolean;
 
-	setEmail: (email: string) => void;
-	setPassword: (password: string) => void;
-	setFormState: (formState: TFormState) => void;
-	setShowIncorrectEmail: (value: boolean) => void;
-	setShowIncorrectPassword: (value: boolean) => void;
-	setShowInvalidEmail: (value: boolean) => void;
-	setShowInvalidPassword: (value: boolean) => void;
-	setShowRequiredEmail: (value: boolean) => void;
-	setShowRequiredPassword: (value: boolean) => void;
+	SetEmail: (email: string) => void;
+	SetPassword: (password: string) => void;
+	SetFormState: (formState: TFormState) => void;
+	SetShowIncorrectEmail: (value: boolean) => void;
+	SetShowIncorrectPassword: (value: boolean) => void;
+	SetShowInvalidEmail: (value: boolean) => void;
+	SetShowInvalidPassword: (value: boolean) => void;
+	SetShowRequiredEmail: (value: boolean) => void;
+	SetShowRequiredPassword: (value: boolean) => void;
 }
 
 const AuthStore: IAuthStore = proxy<IAuthStore>({
@@ -35,19 +35,19 @@ const AuthStore: IAuthStore = proxy<IAuthStore>({
 	showRequiredEmail: false,
 	showRequiredPassword: false,
 
-	setEmail: (email: string) => (AuthStore.email = email),
-	setPassword: (password: string) => (AuthStore.password = password),
-	setFormState: (formState: TFormState) => (AuthStore.formState = formState),
-	setShowIncorrectEmail: (value: boolean) =>
+	SetEmail: (email: string) => (AuthStore.email = email),
+	SetPassword: (password: string) => (AuthStore.password = password),
+	SetFormState: (formState: TFormState) => (AuthStore.formState = formState),
+	SetShowIncorrectEmail: (value: boolean) =>
 		(AuthStore.showIncorrectEmail = value),
-	setShowIncorrectPassword: (value: boolean) =>
+	SetShowIncorrectPassword: (value: boolean) =>
 		(AuthStore.showIncorrectPassword = value),
-	setShowInvalidEmail: (value: boolean) => (AuthStore.showInvalidEmail = value),
-	setShowInvalidPassword: (value: boolean) =>
+	SetShowInvalidEmail: (value: boolean) => (AuthStore.showInvalidEmail = value),
+	SetShowInvalidPassword: (value: boolean) =>
 		(AuthStore.showInvalidPassword = value),
-	setShowRequiredEmail: (value: boolean) =>
+	SetShowRequiredEmail: (value: boolean) =>
 		(AuthStore.showRequiredEmail = value),
-	setShowRequiredPassword: (value: boolean) =>
+	SetShowRequiredPassword: (value: boolean) =>
 		(AuthStore.showRequiredPassword = value),
 
 	// posts: fetch(`https://jsonplaceholder.typicode.com/posts`)
@@ -59,19 +59,18 @@ const AuthStore: IAuthStore = proxy<IAuthStore>({
 });
 
 export const UnsubscribeFromAuthStore = subscribe(AuthStore, () => {
-	console.log("state has changed to", AuthStore);
 	if (AuthStore.formState === "incomplete") {
-		if (AuthStore.email.length >= 1) AuthStore.setShowRequiredEmail(false);
+		if (AuthStore.email.length >= 1) AuthStore.SetShowRequiredEmail(false);
 		if (AuthStore.password.length >= 1)
-			AuthStore.setShowRequiredPassword(false);
+			AuthStore.SetShowRequiredPassword(false);
 		if (AuthStore.email && AuthStore.password)
-			AuthStore.setFormState("complete");
+			AuthStore.SetFormState("complete");
 	}
 	if (AuthStore.formState === "invalid") {
-		if (IsEmailValid(AuthStore.email)) AuthStore.setShowInvalidEmail(false);
-		if (AuthStore.password.length >= 3) AuthStore.setShowInvalidPassword(false);
+		if (IsEmailValid(AuthStore.email)) AuthStore.SetShowInvalidEmail(false);
+		if (AuthStore.password.length >= 3) AuthStore.SetShowInvalidPassword(false);
 		if (IsEmailValid(AuthStore.email) && AuthStore.password.length >= 3)
-			AuthStore.setFormState("valid");
+			AuthStore.SetFormState("valid");
 	}
 });
 
