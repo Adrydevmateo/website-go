@@ -19,6 +19,7 @@ export default defineConfig({
 			"@assets": "/src/assets",
 			"@utils": "/src/utils",
 			"@lib": "/src/lib",
+			"@contracts": "/src/contracts",
 			"@api": "/src/api",
 		},
 	},

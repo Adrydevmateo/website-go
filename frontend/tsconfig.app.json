@@ -25,6 +25,9 @@
 			"@lib/*": [
 				"./src/lib/*"
 			],
+			"@contracts/*": [
+				"./src/contracts/*"
+			],
 			"@api/*": [
 				"./src/api/*"
 			],

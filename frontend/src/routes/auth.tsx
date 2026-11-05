@@ -1,3 +1,10 @@
+import type {
+	ISignInResponse,
+	TErrorType,
+	TFormError,
+	TFormField,
+	TFormState,
+} from "@contracts/form";
 import { createFileRoute } from "@tanstack/react-router";
 import { GetEnv } from "@utils/config";
 import { useEffect, useState } from "react";
@@ -5,29 +12,17 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/auth")({
 	component: RouteComponent,
 });
-type TErrorType = "required" | "incorrect-value" | "incorrect-format";
-type TFormField = "email" | "password";
-type TFormError = {
-	field: TFormField;
-	type: TErrorType;
-};
+
 function IsEmailValid(email: string) {
 	const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	return regex.test(email);
 }
+
 function RouteComponent() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [formErrors, setFormErrors] = useState<TFormError[]>([]);
-	const [formState, setFormState] = useState<
-		"incomplete" | "complete" | "sending" | "idle"
-	>("idle");
-
-	interface ISignInResponse {
-		ok: boolean;
-		data?: string;
-		error?: TFormError;
-	}
+	const [formState, setFormState] = useState<TFormState>("idle");
 
 	async function SignIn(
 		email: string,
