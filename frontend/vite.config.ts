@@ -21,6 +21,7 @@ export default defineConfig({
 			"@lib": "/src/lib",
 			"@contracts": "/src/contracts",
 			"@api": "/src/api",
+			"@routes": "/src/routes",
 		},
 	},
 });

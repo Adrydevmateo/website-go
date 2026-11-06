@@ -1,5 +1,6 @@
 import { SignIn } from "@api/v1";
-import AuthStore, { UnsubscribeFromAuthStore } from "@lib/auth";
+import AuthStore from "@lib/auth";
+import { useNavigate } from "@tanstack/react-router";
 import { IsEmailValid } from "@utils/form";
 import { useSnapshot } from "valtio";
 
@@ -7,6 +8,7 @@ type TInputChangeEvent = React.ChangeEvent<HTMLInputElement, HTMLInputElement>;
 
 export default function SignInForm() {
 	const state = useSnapshot(AuthStore);
+	const navigate = useNavigate({ from: "/auth" });
 
 	const HandleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -42,11 +44,11 @@ export default function SignInForm() {
 			return;
 		}
 		if (data) {
-			// TODO: unsubscribe before redirection => UnsubscribeFromAuthStore()
 			state.SetFormState("success");
 			state.SetEmail("");
 			state.SetPassword("");
 			console.log("DATA FROM FETCHING: ", data);
+			navigate({ to: "/" });
 			return;
 		}
 	};
