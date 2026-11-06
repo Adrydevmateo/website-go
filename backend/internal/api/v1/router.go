@@ -51,6 +51,7 @@ func Router() http.Handler {
 		r.Get("/", welcomeHandler)
 		r.Get("/health", healthHandler)
 
+		// TODO: Add refresh jwt endpoint
 		r.Post("/signin", signInHandler)
 		r.Post("/signup", signUpHandler)
 	})

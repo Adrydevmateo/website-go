@@ -1,6 +1,7 @@
 import { SignIn } from "@api/v1";
 import AuthStore from "@lib/auth";
 import { useNavigate } from "@tanstack/react-router";
+import { SetToLocalStorage } from "@utils/data";
 import { IsEmailValid } from "@utils/form";
 import { useSnapshot } from "valtio";
 
@@ -48,6 +49,7 @@ export default function SignInForm() {
 			state.SetEmail("");
 			state.SetPassword("");
 			console.log("DATA FROM FETCHING: ", data);
+			SetToLocalStorage("authenticated", "true")
 			navigate({ to: "/" });
 			return;
 		}
