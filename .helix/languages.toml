@@ -1,0 +1,32 @@
+[[language]]
+name = "bash"
+language-servers = ["bashls"]
+auto-format = true
+
+[language-server.bashls]
+command = "bashls"
+
+[[language]]
+name = "python"
+language-servers = [ "ruff" ]
+auto-format = true
+
+[language-server.ruff]
+command = "ruff"
+args = ["server"]
+
+[language-server.pylsp.config.pylsp.plugins.ruff]
+lineLength = 88
+preview = true
+select = ["E4", "E7", "E9", "F"] # Rules to be enabled by ruff
+ignore = [] # Rules to be ignored by ruff
+
+[[language]]
+name = "toml"
+roots = ["."]
+language-servers = ["taplo"]
+auto-format = true
+
+[[language]]
+name = "typescript"
+auto-format = true
